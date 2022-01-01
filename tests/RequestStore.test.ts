@@ -19,6 +19,20 @@ describe('RequestStore', () => {
       void store.fetch()
     })
 
+    test(`should be fetcbed with plain arguments`, () => {
+      const store = new RequestStore(async (count: number) => {
+        return count
+      })
+      void store.fetch(1)
+    })
+
+    test(`should be fetcbed with object arguments`, () => {
+      const store = new RequestStore(async (obj: { name: string }) => {
+        return obj
+      })
+      void store.fetch({ name: 'whalemare' })
+    })
+
     test(`should be awaitable`, async () => {
       const store = new RequestStore(async () => {
         // nothing
