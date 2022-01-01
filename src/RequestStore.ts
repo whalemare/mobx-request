@@ -34,39 +34,16 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
   error: E | undefined = undefined
   value: R | undefined = undefined
 
+  // TODO: need find a way to mark args as optional, when it undefined
+  // @ts-ignore
   fetch: RequestFetch<R, A, E> = (args: A, props?: RequestProps): CancelablePromise<R> => {
-    this.#onStartRequest(props)
+    this.#onRequestStarted(props)
     const cancelablePromise = new CancelablePromise<R>((resolve, reject, onCancel) => {
       this.createRequest(args, { isRefreshing: this.isRefreshing, onCancel }).then(resolve).catch(reject)
     })
-      .then(response => {
-        runInAction(() => {
-          this.cancelablePromise = undefined
-          this.isLoading = false
-          this.error = undefined
-          this.value = response
-        })
-        return response
-      })
-      .catch(e => {
-        let error: Error
-        if (e instanceof Error) {
-          error = e
-        } else {
-          error = new Error(e)
-        }
-
-        runInAction(() => {
-          this.cancelablePromise = undefined
-          this.isLoading = false
-          this.isRefreshing = false
-          this.error = error as E
-        })
-        throw error
-      })
-    runInAction(() => {
-      this.cancelablePromise = cancelablePromise
-    })
+      .then(this.#onRequestSuccess)
+      .catch(this.#onRequestError)
+    this.cancelablePromise = cancelablePromise
     return cancelablePromise
   }
 
@@ -79,12 +56,43 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
     this.cancelablePromise = undefined
   }
 
-  #onStartRequest = (props?: RequestProps) => {
+  #onRequestStarted = (props?: RequestProps) => {
     runInAction(() => {
       this.isLoading = true
       this.error = undefined
       this.isRefreshing = props?.isRefresh ?? false
     })
+  }
+
+  #onRequestError = (e: unknown) => {
+    let error: Error
+    if (e instanceof Error) {
+      error = e
+    } else {
+      error = new Error(typeof e === 'string' ? e : `Unable determine error type ${e}`)
+    }
+
+    runInAction(() => {
+      this.cancelablePromise = undefined
+      this.isLoading = false
+      this.isRefreshing = false
+      this.error = error as E
+    })
+    throw error
+  }
+
+  #onRequestSuccess = (response: R) => {
+    runInAction(() => {
+      this.cancelablePromise = undefined
+      this.isLoading = false
+      this.error = undefined
+      this.value = response
+    })
+    return response
+  }
+
+  cancel(): void {
+    throw new Error('Method not implemented.')
   }
 
   constructor(private createRequest: RequestCreator<R, A>, options?: RequestOptions<R, E>) {
@@ -98,8 +106,5 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
     }
 
     makeAutoObservable(this)
-  }
-  cancel(): void {
-    throw new Error('Method not implemented.')
   }
 }
