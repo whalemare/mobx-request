@@ -18,6 +18,13 @@ describe('RequestStore', () => {
       })
       void store.fetch()
     })
+
+    test(`should be awaitable`, async () => {
+      const store = new RequestStore(async () => {
+        // nothing
+      })
+      await store.fetch()
+    })
   })
 
   test('should unable to call private functions', async () => {
