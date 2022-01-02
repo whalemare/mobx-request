@@ -4,10 +4,10 @@
 import { makeAutoObservable, runInAction } from 'mobx'
 import { CancellablePromise } from 'real-cancellable-promise'
 
-import { RequestProps } from './RequestProps'
 import { CancelationError } from './request/CancelationError'
 import { RequestFetch } from './request/RequestFetch'
 import { RequestOptions } from './request/RequestOptions'
+import { RequestProps } from './request/RequestProps'
 import { Requestable } from './request/Requestable'
 
 export interface RequestStoreState {
