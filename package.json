@@ -1,6 +1,6 @@
 {
   "name": "mobx-request",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/whalemare/mobx-request"
@@ -80,8 +80,6 @@
   "files": [
     "build/main",
     "build/module",
-    "!**/*.spec.*",
-    "!**/*.json",
     "CHANGELOG.md",
     "LICENSE",
     "README.md"
