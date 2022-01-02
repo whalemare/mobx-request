@@ -37,7 +37,7 @@ describe('progress', () => {
         values.forEach((value, index) => {
           setTimeout(() => {
             onProgress({
-              current: index,
+              loaded: index,
               total: values.length,
             })
             if (index === values.length - 1) {

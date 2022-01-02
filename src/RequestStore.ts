@@ -136,7 +136,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
         if (event.total === 0) {
           this.progress = 0
         } else {
-          this.progress = event.current / event.total
+          this.progress = event.loaded / event.total
         }
       })
     } else {

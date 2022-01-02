@@ -1,4 +1,4 @@
 export interface ProgressEvent {
-  current: number
+  loaded: number
   total: number
 }

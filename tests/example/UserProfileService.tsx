@@ -20,7 +20,7 @@ class UserProfileService {
   downloadVideo = async (uri: string, onProgress: (event: ProgressEvent) => void) => {
     for (let index = 0; index < 1000; index++) {
       await delay(1)
-      onProgress({ total: 1000, current: index }) // emulate progress
+      onProgress({ total: 1000, loaded: index }) // emulate progress
     }
     return uri
   }

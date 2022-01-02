@@ -138,3 +138,36 @@ const downloadCancelableVideo = async (uri: string, onCancel: (cancelHandler: ()
 If you don’t pass handler inside `onCancel`, by default request will be crashed with `CancellableError`
 
 For details, check the [tests/cancel.test.ts](https://github.com/whalemare/mobx-request/blob/master/tests/cancel.test.ts) test file
+
+## Examples
+
+#### Cancel request with axios
+
+```tsx
+import axios from 'axios'
+import { RequestStore } from 'mobx-request'
+
+new RequestStore(async (url: string, { onCancel }) => {
+  const cancelable = axios.CancelToken.source()
+  onCancel(cancelable.cancel)
+
+  return axios.get(url, {
+    cancelToken: cancelable.token,
+  })
+})
+```
+
+#### Track progress with axios
+
+```tsx
+import axios from 'axios'
+import { RequestStore } from 'mobx-request'
+
+new RequestStore(async (url: string, { onProgress }) => {
+  return axios.get(url, {
+    onDownloadProgress: onProgress,
+    // or
+    onUploadProgress: onProgress,
+  })
+})
+```
