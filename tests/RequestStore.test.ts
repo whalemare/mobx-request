@@ -41,14 +41,6 @@ describe('RequestStore', () => {
     })
   })
 
-  test('should unable to call private functions', async () => {
-    const store = new RequestStore(jest.fn())
-    await expect(async () => {
-      //@ts-expect-error
-      return store.onStartRequest()
-    }).rejects.toBeTruthy()
-  })
-
   describe(`when request not started`, () => {
     test('isLoading should be false', () => {
       const store = new RequestStore<void, undefined>(async () => {
@@ -59,6 +51,22 @@ describe('RequestStore', () => {
   })
 
   describe(`when request started`, () => {
+    test(`should return value when fetch`, async () => {
+      const store = new RequestStore(async () => {
+        return 1
+      })
+      const response = await store.fetch()
+      expect(response).toBe(1)
+    })
+
+    test(`should receive data as first argument`, async () => {
+      const store = new RequestStore(async (arg: number) => {
+        return arg
+      })
+      const response = await store.fetch(1)
+      expect(response).toBe(1)
+    })
+
     test(`isLoading should be true`, () => {
       const store = new RequestStore<void, undefined>(async () => {
         // do nothing
@@ -66,6 +74,22 @@ describe('RequestStore', () => {
       void store.fetch()
       expect(store.isLoading).toBe(true)
     })
+
+    test(`isRefreshing should be true when call refresh`, () => {
+      const store = new RequestStore<void, undefined>(async () => {
+        // do nothing
+      })
+      void store.fetch(undefined, { isRefresh: true })
+      expect(store.isLoading).toBe(true)
+    })
+  })
+
+  test('should unable to call private functions', async () => {
+    const store = new RequestStore(jest.fn())
+    await expect(async () => {
+      //@ts-expect-error
+      return store.onStartRequest()
+    }).rejects.toBeTruthy()
   })
 })
 

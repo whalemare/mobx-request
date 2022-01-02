@@ -4,6 +4,7 @@
 import { CancelablePromise } from 'cancelable-promise'
 import { makeAutoObservable, runInAction } from 'mobx'
 
+import { RequestProps } from './RequestProps'
 import { RequestFetch } from './request/RequestFetch'
 import { RequestOptions } from './request/RequestOptions'
 import { Requestable } from './request/Requestable'
@@ -22,10 +23,6 @@ export interface RequestStoreState {
 
 type RequestCreator<R, A = undefined> = (args: A, state: RequestStoreState) => Promise<R>
 
-interface RequestProps {
-  isRefresh: boolean
-}
-
 export class RequestStore<R, A = undefined, E extends Error = Error> implements Requestable<R, A, E> {
   private cancelablePromise?: CancelablePromise<R>
 
@@ -37,6 +34,17 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
   // TODO: need find a way to mark args as optional, when it undefined
   // @ts-ignore
   fetch: RequestFetch<R, A, E> = (args: A, props?: RequestProps): CancelablePromise<R> => {
+    if (this.isLoading && !props?.isRefresh) {
+      // unable to create fetch on already loaded request
+      if (this.cancelablePromise) {
+        return this.cancelablePromise
+      } else {
+        throw new Error(
+          `Inconsistent state, isLoading ${this.isLoading} but cancelablePromise is ${this.cancelablePromise}`,
+        )
+      }
+    }
+
     this.#onRequestStarted(props)
     const cancelablePromise = new CancelablePromise<R>((resolve, reject, onCancel) => {
       this.createRequest(args, { isRefreshing: this.isRefreshing, onCancel }).then(resolve).catch(reject)
