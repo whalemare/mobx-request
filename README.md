@@ -3,7 +3,7 @@
 Manage async requests with no-effort
 
 - ⚡ Efficient UI updates with MobX observables
-- 🔎 Make requests, refresh, track loading, progress, cancelation and etc.
+- 🔎 [Make requests](https://github.com/whalemare/mobx-request#make-request), [refresh](https://github.com/whalemare/mobx-request#refresh-request), [track loading](https://github.com/whalemare/mobx-request#make-request), [progress](https://github.com/whalemare/mobx-request#track-progress), [cancelation](https://github.com/whalemare/mobx-request#cancel-request) and etc.
 - 🧪 Well [tested](https://github.com/whalemare/mobx-request/tree/master/tests)
 - 🤸‍♂️ TypeScript
 - ⚛ Designed for React and MobX
@@ -56,7 +56,7 @@ const onRefresh = () => {
 #### Track progress
 
 
-For `fire and forget` requests, you can use `isLoading` variable for display loader as described in **Make Request**
+For `fire and forget` requests, you can use `isLoading` variable for display loader as described in [Make Request](https://github.com/whalemare/mobx-request#make-request)
 
 But, when you need granular progress state tracking, you can use `progress` numeric variable
 
