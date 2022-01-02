@@ -2449,11 +2449,6 @@ camelcase@^6.2.0:
   resolved "https://registry.yarnpkg.com/camelcase/-/camelcase-6.2.1.tgz#250fd350cfd555d0d2160b1d51510eaf8326e86e"
   integrity sha512-tVI4q5jjFV5CavAU8DXfza/TJcZutVKo/5Foskmsqcm0MsL91moHvwiGNnqaa2o6PF/7yT5ikDRcVcl8Rj6LCA==
 
-cancelable-promise@4.2.1:
-  version "4.2.1"
-  resolved "https://registry.yarnpkg.com/cancelable-promise/-/cancelable-promise-4.2.1.tgz#b02f79c5dde2704acfff1bc1ac2b4090f55541fe"
-  integrity sha512-PJZ/000ocWhPZQBAuNewAOMA2WEkJ8RhXI6AxeGLiGdW8EYDmumzo9wKyNgjDgxc1q/HbXuTdlcI+wXrOe/jMw==
-
 caniuse-lite@^1.0.30001286:
   version "1.0.30001294"
   resolved "https://registry.yarnpkg.com/caniuse-lite/-/caniuse-lite-1.0.30001294.tgz#4849f27b101fd59ddee3751598c663801032533d"
@@ -6799,6 +6794,11 @@ readdirp@~3.6.0:
   integrity sha512-hOS089on8RduqdbhvQ5Z37A0ESjsqz6qnRcffsMU3495FuTdqSm+7bhJ29JvIOsBDEEnan5DPu9t3To9VRlMzA==
   dependencies:
     picomatch "^2.2.1"
+
+real-cancellable-promise@1.1.1:
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/real-cancellable-promise/-/real-cancellable-promise-1.1.1.tgz#be793502f7ed8067936d95dc040a2d2a2a1944a7"
+  integrity sha512-vxanUX4Aff5sRX6Rb1CSeCDWhO20L0hKQXWTLOYbtRo9WYFMjlhEBX0E75iz3+7ucrmFdPpDolwLC7L65P7hag==
 
 rechoir@^0.6.2:
   version "0.6.2"

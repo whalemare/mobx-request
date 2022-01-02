@@ -1,10 +1,11 @@
 // Any needed for correctly type generation depend on request creator function
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { CancelablePromise } from 'cancelable-promise'
 import { makeAutoObservable, runInAction } from 'mobx'
+import { CancellablePromise } from 'real-cancellable-promise'
 
 import { RequestProps } from './RequestProps'
+import { CancelationError } from './request/CancelationError'
 import { RequestFetch } from './request/RequestFetch'
 import { RequestOptions } from './request/RequestOptions'
 import { Requestable } from './request/Requestable'
@@ -18,13 +19,13 @@ export interface RequestStoreState {
   /**
    * Override default `cancelHandler` by passing your function inside `onCancel`
    */
-  onCancel: (cancelHandler: () => void) => void
+  onCancel: (cancelHandler: () => any) => void
 }
 
 type RequestCreator<R, A = undefined> = (args: A, state: RequestStoreState) => Promise<R>
 
 export class RequestStore<R, A = undefined, E extends Error = Error> implements Requestable<R, A, E> {
-  private cancelablePromise?: CancelablePromise<R>
+  private cancelablePromise?: CancellablePromise<R>
 
   isLoading = false
   isRefreshing = false
@@ -33,7 +34,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
 
   // TODO: need find a way to mark args as optional, when it undefined
   // @ts-ignore
-  fetch: RequestFetch<R, A, E> = (args: A, props?: RequestProps): CancelablePromise<R> => {
+  fetch: RequestFetch<R, A, E> = (args: A, props?: RequestProps): CancellablePromise<R> => {
     if (this.isLoading && !props?.isRefresh) {
       // unable to create fetch on already loaded request
       if (this.cancelablePromise) {
@@ -45,23 +46,36 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
       }
     }
 
+    let cancelHandler = (): any => {
+      throw new CancelationError('CancellationError from RequestStore')
+    }
+
     this.#onRequestStarted(props)
-    const cancelablePromise = new CancelablePromise<R>((resolve, reject, onCancel) => {
-      // if (this.options?.defaultCancelHandler) {
-      //   onCancel(this.options.defaultCancelHandler)
-      // } else {
-      //   onCancel(() => {
-      //     console.log('onCancel reject should')
-      //     reject('CancelationError: promise was be cancelled without onCancel override')
-      //   })
-      // }
-      this.createRequest(args, { isRefreshing: this.isRefreshing, onCancel }).then(resolve).catch(reject)
-    })
+
+    this.cancelablePromise = new CancellablePromise<R>(
+      this.createRequest(args, { isRefreshing: this.isRefreshing, onCancel: handler => (cancelHandler = handler) }),
+      cancelHandler,
+    )
       .then(this.#onRequestSuccess)
       .catch(this.#onRequestError)
+    return this.cancelablePromise
 
-    this.cancelablePromise = cancelablePromise
-    return cancelablePromise
+    // const cancelablePromise = new CancellablePromise<R>((resolve, reject, onCancel) => {
+    // if (this.options?.defaultCancelHandler) {
+    //   onCancel(this.options.defaultCancelHandler)
+    // } else {
+    //   onCancel(() => {
+    //     console.log('onCancel reject should')
+    //     reject('CancelationError: promise was be cancelled without onCancel override')
+    //   })
+    // }
+    // this.createRequest(args, { isRefreshing: this.isRefreshing, onCancel }).then(resolve).catch(reject)
+    // })
+    // .then(this.#onRequestSuccess)
+    // .catch(this.#onRequestError)
+
+    // this.cancelablePromise = cancelablePromise
+    // return cancelablePromise
   }
 
   clear = () => {

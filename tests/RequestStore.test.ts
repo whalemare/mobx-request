@@ -6,6 +6,25 @@ const delay = async (timeout: number) => {
 }
 
 describe('RequestStore', () => {
+  // test('c', async () => {
+  //   const promise = new CancellablePromise(
+  //     async () => {
+  //       return 1
+  //     },
+  //     () => {
+  //       console.log('onCancel')
+  //     },
+  //   )
+  //   setTimeout(() => {
+  //     console.log('cancel')
+  //     promise.cancel()
+  //   }, 100)
+  //   console.log('await promise')
+  //   await promise
+
+  //   console.log('--THE END--')
+  // })
+
   describe(`when create`, () => {
     test('can be created with plain async function', () => {
       new RequestStore(async () => {
@@ -119,24 +138,26 @@ describe('RequestStore', () => {
     })
 
     test(`request should be throw CancellationError when onCancel not overrided in request`, async () => {
-      const func = jest.fn()
+      const funcInsidePromise = jest.fn()
+      const funcAfterAwait = jest.fn()
+      const funcCatch = jest.fn()
+
       const store = new RequestStore(async () => {
-        await delay(200)
-        func()
+        await delay(1)
+        funcInsidePromise()
         return 4
       })
-      console.log('store.fetch()')
       const promise = store.fetch()
-      console.log('promise.cancel()')
-      promise.cancel()
       try {
-        console.log('await promise')
-        const response = await promise
-        console.log('response', response)
-        expect(func).toBeCalledTimes(0)
+        promise.cancel()
+        await promise
+        funcAfterAwait()
       } catch (e) {
-        console.log('catch e', e)
-        expect(e).toBeInstanceOf(CancelationError)
+        funcCatch(e)
+      } finally {
+        expect(funcInsidePromise).toBeCalledTimes(0)
+        expect(funcAfterAwait).toBeCalledTimes(0)
+        expect(funcCatch).toBeCalledWith(new CancelationError('CancellationError from RequestStore'))
       }
     })
   })
