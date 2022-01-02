@@ -47,10 +47,19 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
 
     this.#onRequestStarted(props)
     const cancelablePromise = new CancelablePromise<R>((resolve, reject, onCancel) => {
+      // if (this.options?.defaultCancelHandler) {
+      //   onCancel(this.options.defaultCancelHandler)
+      // } else {
+      //   onCancel(() => {
+      //     console.log('onCancel reject should')
+      //     reject('CancelationError: promise was be cancelled without onCancel override')
+      //   })
+      // }
       this.createRequest(args, { isRefreshing: this.isRefreshing, onCancel }).then(resolve).catch(reject)
     })
       .then(this.#onRequestSuccess)
       .catch(this.#onRequestError)
+
     this.cancelablePromise = cancelablePromise
     return cancelablePromise
   }
@@ -100,10 +109,10 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
   }
 
   cancel(): void {
-    throw new Error('Method not implemented.')
+    this.cancelablePromise?.cancel()
   }
 
-  constructor(private createRequest: RequestCreator<R, A>, options?: RequestOptions<R, E>) {
+  constructor(private createRequest: RequestCreator<R, A>, private options?: RequestOptions<R, E>) {
     if (options) {
       if (options.initial) {
         this.isLoading = options.initial.isLoading ?? false
