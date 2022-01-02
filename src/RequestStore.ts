@@ -5,6 +5,7 @@ import { makeAutoObservable, runInAction } from 'mobx'
 import { CancellablePromise } from 'real-cancellable-promise'
 
 import { CancelationError } from './request/CancelationError'
+import { ProgressEvent } from './request/ProgressEvent'
 import { RequestFetch } from './request/RequestFetch'
 import { RequestOptions } from './request/RequestOptions'
 import { RequestProps } from './request/RequestProps'
@@ -20,6 +21,18 @@ export interface RequestStoreState {
    * Override default `cancelHandler` by passing your function inside `onCancel`
    */
   onCancel: (cancelHandler: () => any) => void
+
+  /**
+   * Invoke it when you need to handle progress state of request with more accuracy
+   *
+   * By default `progress` will be
+   *```
+   * 0 before `.fetch()`
+   * 1 after resolve
+   * 0 after reject
+   * ```
+   */
+  onProgress: (event: ProgressEvent) => void
 }
 
 type RequestCreator<R, A = undefined> = (args: A, state: RequestStoreState) => Promise<R>
@@ -31,12 +44,13 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
   isRefreshing = false
   error: E | undefined = undefined
   value: R | undefined = undefined
+  progress = 0
 
   // TODO: need find a way to mark args as optional, when it undefined
   // @ts-ignore
   fetch: RequestFetch<R, A, E> = (args: A, props?: RequestProps): CancellablePromise<R> => {
     if (this.isLoading && !props?.isRefresh) {
-      // unable to create fetch on already loaded request
+      // unable to create fetch on already loaded request, just skip it
       if (this.cancelablePromise) {
         return this.cancelablePromise
       } else {
@@ -52,7 +66,11 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
 
     this.#onRequestStarted(props)
     this.cancelablePromise = new CancellablePromise<R>(
-      this.createRequest(args, { isRefreshing: this.isRefreshing, onCancel: handler => (cancelHandler = handler) }),
+      this.createRequest(args, {
+        isRefreshing: this.isRefreshing,
+        onProgress: this.#onProgress,
+        onCancel: handler => (cancelHandler = handler),
+      }),
       cancelHandler,
     )
       .then(this.#onRequestSuccess)
@@ -60,8 +78,8 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
     return this.cancelablePromise
   }
 
-  clear = () => {
-    this.cancelablePromise?.cancel()
+  clear() {
+    this.cancel()
     this.isLoading = false
     this.isRefreshing = false
     this.error = undefined
@@ -69,11 +87,17 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
     this.cancelablePromise = undefined
   }
 
+  cancel(): void {
+    this.cancelablePromise?.cancel()
+  }
+
   #onRequestStarted = (props?: RequestProps) => {
     runInAction(() => {
+      this.cancelablePromise = undefined
       this.isLoading = true
       this.error = undefined
       this.isRefreshing = props?.isRefresh ?? false
+      this.progress = 0
     })
   }
 
@@ -90,6 +114,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
       this.isLoading = false
       this.isRefreshing = false
       this.error = error as E
+      this.progress = 0
     })
     throw error
   }
@@ -100,15 +125,26 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
       this.isLoading = false
       this.error = undefined
       this.value = response
+      this.progress = 1
     })
     return response
   }
 
-  cancel(): void {
-    this.cancelablePromise?.cancel()
+  #onProgress = (event: ProgressEvent) => {
+    if (this.isLoading) {
+      runInAction(() => {
+        if (event.total === 0) {
+          this.progress = 0
+        } else {
+          this.progress = event.current / event.total
+        }
+      })
+    } else {
+      throw new Error('Unable to track progress of already finished event')
+    }
   }
 
-  constructor(private createRequest: RequestCreator<R, A>, private options?: RequestOptions<R, E>) {
+  constructor(private createRequest: RequestCreator<R, A>, options?: RequestOptions<R, E>) {
     if (options) {
       if (options.initial) {
         this.isLoading = options.initial.isLoading ?? false
