@@ -48,7 +48,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
 
   // TODO: need find a way to mark args as optional, when it undefined
   // @ts-ignore
-  fetch: RequestFetch<R, A, E> = (args: A, props?: RequestProps): CancellablePromise<R> => {
+  fetch: RequestFetch<R, A> = (args: A, props?: RequestProps): CancellablePromise<R> => {
     if (this.isLoading && !props?.isRefresh) {
       // unable to create fetch on already loaded request, just skip it
       if (this.cancelablePromise) {

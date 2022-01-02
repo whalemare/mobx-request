@@ -9,6 +9,6 @@ export interface Requestable<R = unknown, A = unknown, E extends Error = Error>
     Errorable<E>,
     Progressable,
     Cancelable {
-  fetch: RequestFetch<R, A, E>
+  fetch: RequestFetch<R, A>
   value: R | undefined
 }
