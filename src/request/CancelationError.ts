@@ -1,1 +1,3 @@
-export class CancelationError extends Error {}
+import { Cancellation } from 'real-cancellable-promise'
+
+export class CancelationError extends Cancellation {}

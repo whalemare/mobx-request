@@ -51,7 +51,6 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
     }
 
     this.#onRequestStarted(props)
-
     this.cancelablePromise = new CancellablePromise<R>(
       this.createRequest(args, { isRefreshing: this.isRefreshing, onCancel: handler => (cancelHandler = handler) }),
       cancelHandler,
@@ -59,23 +58,6 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
       .then(this.#onRequestSuccess)
       .catch(this.#onRequestError)
     return this.cancelablePromise
-
-    // const cancelablePromise = new CancellablePromise<R>((resolve, reject, onCancel) => {
-    // if (this.options?.defaultCancelHandler) {
-    //   onCancel(this.options.defaultCancelHandler)
-    // } else {
-    //   onCancel(() => {
-    //     console.log('onCancel reject should')
-    //     reject('CancelationError: promise was be cancelled without onCancel override')
-    //   })
-    // }
-    // this.createRequest(args, { isRefreshing: this.isRefreshing, onCancel }).then(resolve).catch(reject)
-    // })
-    // .then(this.#onRequestSuccess)
-    // .catch(this.#onRequestError)
-
-    // this.cancelablePromise = cancelablePromise
-    // return cancelablePromise
   }
 
   clear = () => {
