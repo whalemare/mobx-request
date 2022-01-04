@@ -126,6 +126,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
       this.error = undefined
       this.value = response
       this.progress = 1
+      this.isRefreshing = false
     })
     return response
   }
