@@ -54,9 +54,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
       if (this.cancelablePromise) {
         return this.cancelablePromise
       } else {
-        throw new Error(
-          `Inconsistent state, isLoading ${this.isLoading} but cancelablePromise is ${this.cancelablePromise}`,
-        )
+        // just do another request, because previous is not exists
       }
     }
 
