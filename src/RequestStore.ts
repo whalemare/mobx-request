@@ -42,6 +42,16 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
 
   isLoading = false
   isRefreshing = false
+  /**
+   * *undefined* - when request not called yet
+   *
+   * *null* - when request called but not finished
+   *
+   * *true* - when last call of request finished with success and have no errors
+   *
+   * *false* - when last call of request finished with error
+   */
+  isSuccess: boolean | undefined | null = undefined
   error: E | undefined = undefined
   value: R | undefined = undefined
   progress = 0
@@ -96,6 +106,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
       this.error = undefined
       this.isRefreshing = props?.isRefresh ?? false
       this.progress = 0
+      this.isSuccess = null
     })
   }
 
@@ -113,6 +124,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
       this.isRefreshing = false
       this.error = error as E
       this.progress = 0
+      this.isSuccess = false
     })
     throw error
   }
@@ -125,6 +137,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
       this.value = response
       this.progress = 1
       this.isRefreshing = false
+      this.isSuccess = true
     })
     return response
   }
