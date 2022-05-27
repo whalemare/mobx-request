@@ -39,12 +39,10 @@ export class LocalServer {
 
   start = async () => {
     await this.server.start(this.port)
-    console.debug('Start server at port', this.port)
   }
 
   stop = async () => {
     await this.server.stop()
-    console.debug('Stop server')
   }
 
   restart = async () => {

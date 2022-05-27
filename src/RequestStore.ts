@@ -1,10 +1,9 @@
 // Any needed for correctly type generation depend on request creator function
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { makeAutoObservable, runInAction } from 'mobx'
-import { CancellablePromise } from 'real-cancellable-promise'
+import { flow, makeAutoObservable, runInAction } from 'mobx'
+import type { CancellablePromise } from 'mobx/dist/internal'
 
-import { CancelationError } from './request/CancelationError'
 import { ProgressEvent } from './request/ProgressEvent'
 import { RequestFetch } from './request/RequestFetch'
 import { RequestOptions } from './request/RequestOptions'
@@ -18,14 +17,6 @@ export interface RequestStoreState {
   isRefreshing: boolean
 
   /**
-   * Override default `cancelHandler` by passing your function inside `onCancel`
-   *
-   * You **must** throw instance of Error here for cancel request
-   * Otherwise, it will be normally continued
-   */
-  onCancel: (cancelHandler: () => any) => void
-
-  /**
    * Invoke it when you need to handle progress state of request with more accuracy
    *
    * By default `progress` will be
@@ -36,12 +27,35 @@ export interface RequestStoreState {
    * ```
    */
   onProgress: (event: ProgressEvent) => void
+
+  /**
+   * Signal for your request, that is should be aborted
+   *
+   * Can be passed directly to axios, fetch and etc
+   */
+  signal: AbortSignal
 }
 
 type RequestCreator<R, A = undefined> = (args: A, state: RequestStoreState) => Promise<R>
 
 export class RequestStore<R, A = undefined, E extends Error = Error> implements Requestable<R, A, E> {
-  private cancelablePromise?: CancellablePromise<R>
+  private cancellable?: [CancellablePromise<R>, AbortController] | undefined = undefined
+
+  private start = flow(function* (this: RequestStore<R, A, E>, args: A, signal: AbortSignal, props?: RequestProps) {
+    this.#onRequestStarted(props)
+    try {
+      const response = yield this.createRequest(args, {
+        isRefreshing: this.isRefreshing,
+        onProgress: this.#onProgress,
+        signal: signal,
+      })
+      this.#onRequestSuccess(response)
+      return response
+    } catch (e) {
+      this.#onRequestError(e)
+      throw e
+    }
+  })
 
   isLoading = false
   isRefreshing = false
@@ -61,32 +75,26 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
 
   // TODO: need find a way to mark args as optional, when it undefined
   // @ts-ignore
-  fetch: RequestFetch<R, A> = (args: A, props?: RequestProps): CancellablePromise<R> => {
-    if (this.isLoading && !props?.isRefresh) {
-      // unable to create fetch on already loaded request, just skip it
-      if (this.cancelablePromise) {
-        return this.cancelablePromise
+  fetch: RequestFetch<R, A> = async (args: A, props?: RequestProps) => {
+    if (this.isLoading) {
+      if (props?.isRefresh) {
+        // cancel request that in progress and create new one
+        this.cancel()
       } else {
-        // just do another request, because previous is not exists
+        // unable to create fetch on already loaded request, just skip it
+        if (this.cancellable) {
+          return this.cancellable[0]
+        } else {
+          // just do another request, because previous is not exists
+        }
       }
     }
 
-    let cancelHandler = (): any => {
-      throw new CancelationError('CancellationError from RequestStore')
-    }
+    const abort = new AbortController()
+    const cancellablePromise = this.start(args, abort.signal, props)
+    this.cancellable = [cancellablePromise, abort]
 
-    this.#onRequestStarted(props)
-    this.cancelablePromise = new CancellablePromise<R>(
-      this.createRequest(args, {
-        isRefreshing: this.isRefreshing,
-        onProgress: this.#onProgress,
-        onCancel: handler => (cancelHandler = handler),
-      }),
-      cancelHandler,
-    )
-      .then(this.#onRequestSuccess)
-      .catch(this.#onRequestError)
-    return this.cancelablePromise
+    return cancellablePromise
   }
 
   clear = () => {
@@ -95,16 +103,19 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
     this.isRefreshing = false
     this.error = undefined
     this.value = undefined
-    this.cancelablePromise = undefined
+    this.cancellable = undefined
   }
 
   cancel = (): void => {
-    this.cancelablePromise?.cancel()
+    if (this.cancellable) {
+      this.cancellable[1].abort()
+      this.cancellable[0].cancel()
+    }
   }
 
   #onRequestStarted = (props?: RequestProps) => {
     runInAction(() => {
-      this.cancelablePromise = undefined
+      this.cancellable = undefined
       this.isLoading = true
       this.error = undefined
       this.isRefreshing = props?.isRefresh ?? false
@@ -122,7 +133,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
     }
 
     runInAction(() => {
-      this.cancelablePromise = undefined
+      this.cancellable = undefined
       this.isLoading = false
       this.isRefreshing = false
       this.error = error as E
@@ -134,7 +145,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
 
   #onRequestSuccess = (response: R) => {
     runInAction(() => {
-      this.cancelablePromise = undefined
+      this.cancellable = undefined
       this.isLoading = false
       this.error = undefined
       this.value = response

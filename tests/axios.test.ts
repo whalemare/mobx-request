@@ -9,6 +9,10 @@ import { delay } from './delay'
 import { LocalServer } from './utils/LocalServer'
 import { expectRequestCalled } from './utils/expectRequestCalled'
 
+const expectNeverInvoked = () => {
+  expect(true).toBeFalsy()
+}
+
 describe('axios', () => {
   const server = new LocalServer(8080)
   let endpoint: MockedEndpoint
@@ -22,47 +26,25 @@ describe('axios', () => {
     await server.stop()
   })
 
-  test('raw axios with AbortController', async () => {
-    const abort = new AbortController()
-    const func = async () => {
+  test('request should be aborted with signal', async () => {
+    const store = new RequestStore(async (_, { signal }) => {
       await axios(`http://localhost:8080/test`, {
         method: 'get',
-        signal: abort.signal,
+        signal,
       })
-    }
+    })
 
-    void func()
-      .then(() => {
-        expect(true).toBeFalsy()
-      })
+    store
+      .fetch()
+      .then(expectNeverInvoked)
       .catch(e => {
         console.log(e)
         expect(e).toBeTruthy()
       })
 
     await delay(50)
-    abort.abort()
-    await expectRequestCalled(endpoint, 1)
-  })
-
-  test('axios with AbortController', async () => {
-    const store = new RequestStore(async (_, { onCancel }) => {
-      const abort = new AbortController()
-      onCancel(abort.abort)
-
-      await axios(`http://localhost:8080/test`, {
-        method: 'get',
-        signal: abort.signal,
-      })
-    })
-
-    const promise = store.fetch()
-    await delay(50)
-    try {
-      store.cancel()
-    } catch (e) {}
+    store.cancel()
 
     await expectRequestCalled(endpoint, 1)
-    await expect(promise).rejects.toBeTruthy()
   })
 })
