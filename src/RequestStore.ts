@@ -19,6 +19,9 @@ export interface RequestStoreState {
 
   /**
    * Override default `cancelHandler` by passing your function inside `onCancel`
+   *
+   * You **must** throw instance of Error here for cancel request
+   * Otherwise, it will be normally continued
    */
   onCancel: (cancelHandler: () => any) => void
 

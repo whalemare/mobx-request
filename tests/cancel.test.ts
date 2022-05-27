@@ -98,7 +98,7 @@ describe(`when cancel RequestStore`, () => {
     const store = new RequestStore(async () => {
       await delay(1)
       funcInsidePromise()
-      return 4
+      return 'some'
     })
     const promise = store.fetch()
     try {
