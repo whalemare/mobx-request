@@ -1,10 +1,10 @@
 import { RequestStore } from '../src/RequestStore'
 
 describe(`when fetch RequestStore`, () => {
-  test(`onCancel should not be called when request not canceled`, async () => {
+  test(`signal.aborted should be false, when request not canceled`, async () => {
     const cancelHandler = jest.fn()
-    const store = new RequestStore(async (_, { onCancel }) => {
-      onCancel(cancelHandler)
+    const store = new RequestStore(async (_, { signal }) => {
+      expect(signal.aborted).toBeFalsy()
     })
     await store.fetch()
 
