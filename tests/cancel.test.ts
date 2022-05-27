@@ -5,6 +5,21 @@ import { CancelationError } from '../src/request/CancelationError'
 
 import { delay } from './delay'
 
+const endless = async (_: undefined, { onCancel }) => {
+  let cancelled = false
+  onCancel(() => {
+    cancelled = true
+  })
+  let times = 0
+  while (true) {
+    if (cancelled) {
+      return Promise.reject()
+    }
+    await delay(1)
+    console.log('times', ++times)
+  }
+}
+
 describe(`when cancel RequestStore`, () => {
   describe(`when onCancel override without throwing any error`, () => {
     test(`promise should NOT BE REJECTED`, () => {
@@ -90,7 +105,7 @@ describe(`when cancel RequestStore`, () => {
     expect(cancelHandler).toBeCalledTimes(1)
   })
 
-  test(`request should be throw CancellationError when onCancel not overrided in request`, async () => {
+  test(`promise should be throw CancellationError when onCancel not overrided in request`, async () => {
     const funcInsidePromise = jest.fn()
     const funcAfterAwait = jest.fn()
     const funcCatch = jest.fn()
@@ -112,6 +127,36 @@ describe(`when cancel RequestStore`, () => {
       expect(funcAfterAwait).toBeCalledTimes(0)
       expect(funcCatch).toBeCalledWith(new CancelationError('CancellationError from RequestStore'))
     }
+  })
+
+  test(`requestStore.cancel() should skip throwing error in invokation place`, () => {
+    const onError = jest.fn()
+
+    const request = new RequestStore(endless)
+    void request.fetch()
+
+    try {
+      request.cancel()
+    } catch (e) {
+      onError(e)
+    }
+
+    expect(onError).toBeCalledTimes(0)
+  })
+
+  test(`promise.cancel() should throw error in invokation place`, () => {
+    const onError = jest.fn()
+
+    const request = new RequestStore(endless)
+    const promise = request.fetch()
+
+    try {
+      promise.cancel()
+    } catch (e) {
+      onError(e)
+    }
+
+    expect(onError).toBeCalledTimes(0)
   })
 })
 

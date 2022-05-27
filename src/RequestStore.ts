@@ -89,7 +89,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
     return this.cancelablePromise
   }
 
-  clear() {
+  clear = () => {
     this.cancel()
     this.isLoading = false
     this.isRefreshing = false
@@ -98,7 +98,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
     this.cancelablePromise = undefined
   }
 
-  cancel(): void {
+  cancel = (): void => {
     this.cancelablePromise?.cancel()
   }
 
