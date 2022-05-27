@@ -1,6 +1,7 @@
 /* eslint-disable no-console */
 /* eslint-disable jest/no-conditional-expect */
 import axios from 'axios'
+import { MockedEndpoint } from 'mockttp'
 
 import { RequestStore } from '../src/RequestStore'
 
@@ -10,9 +11,11 @@ import { expectRequestCalled } from './utils/expectRequestCalled'
 
 describe('axios', () => {
   const server = new LocalServer(8080)
+  let endpoint: MockedEndpoint
 
   beforeEach(async () => {
     await server.start()
+    endpoint = await server.mock().forGet('/test').thenTimeout()
   })
 
   afterEach(async () => {
@@ -20,8 +23,6 @@ describe('axios', () => {
   })
 
   test('raw axios with AbortController', async () => {
-    const endpoint = await server.mock().forGet('/test').thenTimeout()
-
     const abort = new AbortController()
     const func = async () => {
       await axios(`http://localhost:8080/test`, {
@@ -45,17 +46,6 @@ describe('axios', () => {
   })
 
   test('axios with AbortController', async () => {
-    const endpoint = await server
-      .mock()
-      .forGet('/test')
-      .thenCallback(async request => {
-        await delay(1000)
-        return {
-          body: 'hello',
-          statusCode: 200,
-        }
-      })
-
     const store = new RequestStore(async (_, { onCancel }) => {
       const abort = new AbortController()
       onCancel(abort.abort)
