@@ -1,6 +1,6 @@
 {
   "name": "mobx-request",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "repository": {
     "type": "git",
     "url": "https://github.com/whalemare/mobx-request"
@@ -30,7 +30,7 @@
     "build:module": "tsc -p tsconfig.module.json",
     "test": "jest",
     "test:coverage": "yarn test --coverage",
-    "prepublish": "yarn build"
+    "deploy": "yarn build && npm publish"
   },
   "engines": {
     "node": ">=10"

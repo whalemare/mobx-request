@@ -96,11 +96,11 @@ If you don’t invoke `onProgress` it just will be `0` when request not started 
 #### Cancel request
 
 
-You can cancel request at any time, when it in progress, not started or already finished
+You can cancel request at any time, when it in progress, not started or already finished by usign [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController)
 
 ```tsx
-const store = new RequestStore(async (uri: string, { onCancel }) => {
-  return downloadCancelableVideo(uri, onCancel)
+const store = new RequestStore(async (uri: string, { signal }) => {
+  return downloadCancelableVideo(uri, signal)
 })
 
 const GalleryView = observer(() => {
@@ -119,25 +119,16 @@ const GalleryView = observer(() => {
   )
 })
 
-const downloadCancelableVideo = async (uri: string, onCancel: (cancelHandler: () => void) => void) => {
-  let cancelled = false
-  onCancel(() => {
-    cancelled = true
-  })
+const downloadCancelableVideo = async (uri: string, signal: AbortSignal) => {
   for (let index = 0; index < 1000; index++) {
     await delay(1)
-    if (cancelled) {
+    if (signal.aborted) {
       throw new Error(`Unable to download ${uri}, because request was be cancelled`)
     }
   }
   return uri
 }
 ```
-
-
-If you don’t pass handler inside `onCancel`, by default request will be crashed with `CancellableError`
-
-For details, check the [tests/cancel.test.ts](https://github.com/whalemare/mobx-request/blob/master/tests/cancel.test.ts) test file
 
 ## Examples
 
@@ -147,12 +138,9 @@ For details, check the [tests/cancel.test.ts](https://github.com/whalemare/mobx-
 import axios from 'axios'
 import { RequestStore } from 'mobx-request'
 
-new RequestStore(async (url: string, { onCancel }) => {
-  const cancelable = axios.CancelToken.source()
-  onCancel(cancelable.cancel)
-
+new RequestStore(async (url: string, { signal }) => {
   return axios.get(url, {
-    cancelToken: cancelable.token,
+    signal
   })
 })
 ```
