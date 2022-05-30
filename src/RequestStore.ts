@@ -36,7 +36,7 @@ export interface RequestStoreState {
   signal: AbortSignal
 }
 
-type RequestCreator<R, A = undefined> = (args: A, state: RequestStoreState) => Promise<R>
+export type RequestCreator<R, A = undefined> = (args: A, state: RequestStoreState) => Promise<R>
 
 export class RequestStore<R, A = undefined, E extends Error = Error> implements Requestable<R, A, E> {
   private cancellable?: [CancellablePromise<R>, AbortController] | undefined = undefined
