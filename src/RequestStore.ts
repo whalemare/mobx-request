@@ -57,6 +57,8 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
     }
   })
 
+  private onErrorCallback?: (e: Error) => void = undefined
+
   isLoading = false
   isRefreshing = false
   /**
@@ -140,6 +142,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
       this.progress = 0
       this.isSuccess = false
     })
+    this.onErrorCallback?.(error)
     throw error
   }
 
@@ -178,6 +181,7 @@ export class RequestStore<R, A = undefined, E extends Error = Error> implements 
         this.isRefreshing = options.initial.isRefreshing ?? false
         this.value = options.initial.value
       }
+      this.onErrorCallback = options.onError
     }
 
     makeAutoObservable(this)
