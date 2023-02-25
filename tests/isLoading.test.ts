@@ -1,6 +1,7 @@
-import { autorun } from "mobx"
-import { request } from "../src"
-import { delay } from "./delay"
+import { request } from '../src'
+
+import { delay } from './delay'
+import { expectReaction } from './utils/expectReaction'
 
 describe('isLoading', () => {
   let fetch = request(async () => {
@@ -17,20 +18,25 @@ describe('isLoading', () => {
     expect(fetch.state.isLoading).toBe(false)
   })
 
-  test('isLoading true when request started but not finished', async () => {
-    const runs = [
-      (value: boolean) => expect(value).toBe(false),
-      (value: boolean) => expect(value).toBe(true),
-      (value: boolean) => expect(value).toBe(false),
-    ]
-    let i = 0
-    autorun(() => {
-      console.log('fetch.state.isLoading', fetch.state.isLoading)
-      runs[i](fetch.state.isLoading)
-      i++
-    })
+  test('isLoading change is state in false-true-false when request initial-started-finished', async () => {
+    await expectReaction(
+      () => fetch.state.isLoading,
+      [
+        isLoading => expect(isLoading).toBe(false),
+        isLoading => expect(isLoading).toBe(true),
+        isLoading => expect(isLoading).toBe(false),
+      ],
+      fetch,
+    )
+  })
 
-    await fetch()
-    expect(i).toBe(runs.length)
+  test('reaction should not fired when you observed state', async () => {
+    await expectReaction(
+      () => fetch.state,
+      [
+        // no reaction fired
+      ],
+      fetch,
+    )
   })
 })

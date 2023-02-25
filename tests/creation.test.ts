@@ -1,5 +1,5 @@
-import { RequestStore } from '../src/shared/RequestStore'
 import { request } from '../src/index'
+import { RequestStore } from '../src/shared/RequestStore'
 
 describe('when create request', () => {
   test('async function without arguments', () => {
@@ -41,7 +41,7 @@ describe('when create request', () => {
   })
 
   test(`allow object complex arguments`, () => {
-    const fetch = request(async (object: {name: string}) => {
+    const fetch = request(async (object: { name: string }) => {
       return object
     })
     void fetch({ name: 'whalemare' })
@@ -52,7 +52,7 @@ describe('when create request', () => {
       return count
     })
     const result = await fetch(4)
-    
+
     result satisfies number
 
     // @ts-expect-error
@@ -61,10 +61,11 @@ describe('when create request', () => {
 
   test(`allow return void`, async () => {
     const fetch = request(async (count: number) => {
+      count
       return
     })
     const result = await fetch(4)
-    
+
     result satisfies void
   })
 })

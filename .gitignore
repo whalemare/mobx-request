@@ -9,3 +9,5 @@ coverage
 package-lock.json
 
 .DS_Store
+
+benchmarks/result.txt
