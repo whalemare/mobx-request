@@ -1,4 +1,4 @@
-import { RequestStore } from '../src/RequestStore'
+import { RequestStore } from '../src/shared/RequestStore'
 import { request } from '../src/index'
 
 describe('when create request', () => {

@@ -1,4 +1,4 @@
-import { RequestStore } from '../src/RequestStore'
+import { RequestStore } from '../src/shared/RequestStore'
 
 describe(`when fetch RequestStore`, () => {
   test(`signal.aborted should be false, when request not canceled`, async () => {

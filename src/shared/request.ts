@@ -1,17 +1,13 @@
-import { observable } from 'mobx'
+import { observable, runInAction } from 'mobx'
+import { resolveError } from '../internal/resolveError'
 
 export type RequestCreator<R, A = undefined> = (args: A) => Promise<R>
-
-type WithOptionalArgs<A, R> = A extends undefined
-  ? (noArgs?: undefined) => Promise<R>
-  : A extends never
-  ? () => Promise<R>
-  : (arg: A) => Promise<R>
 
 interface WithState<R> {
   state: {
     isLoading: boolean
     value: R | undefined
+    error: Error | undefined
   }
 }
 
@@ -27,10 +23,28 @@ export function request<
   const state = observable({
     isLoading: false,
     value: undefined as R | undefined,
+    error: undefined as Error | undefined,
   })
 
   const requestFunction: Fn & WithState<R> = async (arg: A) => {
-    return creator(arg)
+    runInAction(() => {
+      state.isLoading = true
+    })
+    
+    try {
+      const result = await creator(arg)
+
+      return result
+    } catch(e) {
+      runInAction(() => {
+        state.error = resolveError(e)
+      })
+      throw e
+    } finally {
+      runInAction(() => {
+        state.isLoading = false
+      })
+    }
   }
 
   // assign name to function for debug purposes

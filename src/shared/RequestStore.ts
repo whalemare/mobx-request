@@ -3,13 +3,11 @@
 
 import { flow, makeAutoObservable, runInAction } from 'mobx'
 import type { CancellablePromise } from 'mobx/dist/internal'
-
-import { ProgressEvent } from './request/ProgressEvent'
-import type { RequestCreator } from './request/RequestCreator'
-import { RequestFetch } from './request/RequestFetch'
-import { RequestOptions } from './request/RequestOptions'
-import { RequestProps } from './request/RequestProps'
-import { Requestable } from './request/Requestable'
+import { Requestable } from '../internal/types/Requestable'
+import { RequestCreator } from '../internal/types/RequestCreator'
+import { RequestFetch } from '../internal/types/RequestFetch'
+import { RequestOptions } from '../internal/types/RequestOptions'
+import { RequestProps } from '../internal/types/RequestProps'
 
 export interface RequestStoreState {
   /**
