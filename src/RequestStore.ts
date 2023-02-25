@@ -5,6 +5,7 @@ import { flow, makeAutoObservable, runInAction } from 'mobx'
 import type { CancellablePromise } from 'mobx/dist/internal'
 
 import { ProgressEvent } from './request/ProgressEvent'
+import type { RequestCreator } from './request/RequestCreator'
 import { RequestFetch } from './request/RequestFetch'
 import { RequestOptions } from './request/RequestOptions'
 import { RequestProps } from './request/RequestProps'
@@ -35,8 +36,6 @@ export interface RequestStoreState {
    */
   signal: AbortSignal
 }
-
-export type RequestCreator<R, A = undefined> = (args: A, state: RequestStoreState) => Promise<R>
 
 export class RequestStore<R, A = undefined, E extends Error = Error> implements Requestable<R, A, E> {
   private cancellable?: [CancellablePromise<R>, AbortController] | undefined = undefined
