@@ -8,7 +8,7 @@ type WithOptionalArgs<A, R> = A extends undefined
   ? () => Promise<R>
   : (arg: A) => Promise<R>
 
-interface RequestFunction<R> {
+interface WithState<R> {
   state: {
     isLoading: boolean
     value: R | undefined
@@ -29,7 +29,7 @@ export function request<
     value: undefined as R | undefined,
   })
 
-  const requestFunction: Fn = async (arg: A) => {
+  const requestFunction: Fn & WithState<R> = async (arg: A) => {
     return creator(arg)
   }
 
